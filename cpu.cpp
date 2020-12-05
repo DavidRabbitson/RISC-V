@@ -1,6 +1,8 @@
 #include"includes.h"
-#include"Hart.h"
-#include"Memory.h"
+#include"./headers/Hart.h"
+#include"./headers/Memory.h"
+#include"./headers/Instruction.h"
+#include"./headers/Executor.h"
 
 int main()
 {
@@ -9,10 +11,14 @@ int main()
         cout << "Cannot open file!" << endl;
 
     Memory mem(&rf);
-    Instr32raw buf = 0;
 
     Hart cpu(&mem);
     cpu.run();
+    Instruction instr;
+
+    ExecId exec = ExecId::CSRRCI;
+
+    printf("exec = %d\n", (int)exec);
 
     rf.close();
 

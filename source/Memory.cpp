@@ -1,8 +1,6 @@
-#ifndef __MEMORY__
-#define __MEMORY__
+#include"../includes.h"
 
-#include"includes.h"
-
+/*
 class Memory
 {
     private:
@@ -11,5 +9,4 @@ class Memory
         Memory(ifstream *program){ m_program = program; };
         ifstream *get_prog_mem(){ return m_program; };
 };
-
-#endif
+*/
