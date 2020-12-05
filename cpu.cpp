@@ -14,11 +14,6 @@ int main()
 
     Hart cpu(&mem);
     cpu.run();
-    Instruction instr;
-
-    ExecId exec = ExecId::CSRRCI;
-
-    printf("exec = %d\n", (int)exec);
 
     rf.close();
 

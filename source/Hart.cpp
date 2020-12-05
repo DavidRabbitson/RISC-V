@@ -7,6 +7,8 @@
 Hart::Hart(Memory *mem)
 {
     m_pc = 0;
+    for(int i = 0; i < 32; i++)
+        m_reg[i] = 0;
     m_memory = mem;
 };
 
@@ -22,10 +24,17 @@ void Hart::decode(Instruction *instr, Instr32raw raw)
     instr->find_executor();
 };
 
+void Hart::execute(Executor *exec, Instruction *instr)
+{
+    exec->execute(instr);
+};
+
 void Hart::run()
 {
     Instr32raw raw = 0;
     Instruction instr;
+    Executor exec(this);
+
     ifstream *memory = m_memory->get_prog_mem();
 
     while(1)
@@ -40,6 +49,8 @@ void Hart::run()
         decode(&instr, raw);
 
         printf("\t EXECID = %d\n", (int)instr.get_exec_id());
+
+        execute(&exec, &instr);
 
         m_pc += 4;
     }

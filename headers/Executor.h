@@ -3,7 +3,7 @@
 
 #include"../includes.h"
 
-enum class ExecId
+enum ExecId
 {
     LUI, AUIPC,
     JAL, JALR, BEQ, BNE, BLT, BGE, BLTU, BGEU,
@@ -16,5 +16,19 @@ enum class ExecId
     CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI,
     FAULT
 };
+
+class Executor
+{
+    private:
+        class Hart *m_hart;
+        void (* m_executors [48])(class Hart*, class Instruction*);
+    public:
+        Executor(class Hart *hart);
+        void execute(class Instruction *instr);
+};
+
+void dummy(Hart *hart, Instruction *instr);
+void addi(Hart *hart, Instruction *instr);
+void add(Hart *hart, Instruction *instr);
 
 #endif

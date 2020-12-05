@@ -2,22 +2,21 @@
 #define __HART__
 
 #include"../includes.h"
-#include"Memory.h"
-#include"Instruction.h"
+#include"Executor.h"
 
 class Hart
 {
     private:
         int m_pc;
         RegVal m_reg[32];
-        Memory *m_memory;
+        class Memory *m_memory;
 
         void fetch(Instr32raw *buf, ifstream *program, int pc);
-        void decode(Instruction *instr, Instr32raw raw);
-        void execute();
+        void decode(class Instruction *instr, Instr32raw raw);
+        void execute(class Executor *exec, class Instruction *instr);
 
     public:
-        Hart(Memory *mem);
+        Hart(class Memory *mem);
 
         RegVal get_reg(RegId reg){ return m_reg[reg]; };
         void set_reg(RegId reg, RegVal val){ m_reg[reg] = val; };
