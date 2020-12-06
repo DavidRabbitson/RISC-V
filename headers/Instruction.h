@@ -11,9 +11,9 @@ class Instruction
         RegVal m_rd;
         RegVal m_rs1;
         RegVal m_rs2;
-        byte m_opcode;
-        byte m_funct3;
-        byte m_funct7;
+        Byte m_opcode;
+        Byte m_funct3;
+        Byte m_funct7;
         ExecId m_executor;
     public:
         RegVal get_rd() { return m_rd; };

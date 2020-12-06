@@ -6,11 +6,14 @@
 #include<cstdint>
 #include<fstream>
 
-typedef uint32_t Instr32raw;
 typedef uint32_t Word;
+typedef uint16_t HalfWord;
+typedef uint8_t  Byte;
+
+typedef uint32_t Instr32raw;
 typedef uint32_t RegVal;
+typedef int32_t  SignedRegVal;
 typedef uint8_t  RegId;
-typedef uint8_t  byte;
 
 using namespace std;
 

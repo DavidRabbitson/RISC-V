@@ -4,11 +4,23 @@
 #include"../includes.h"
 #include"Executor.h"
 
+enum RegName
+{
+    Zero,
+    ra, sp, gp, tp,
+    t0, t1, t2,
+    s0, s1,
+    a0, a1, a2, a3, a4, a5, a6, a7,
+    s2, s3, s4, s5, s6, s7, s8, s9, s10, s11,
+    t3, t4, t5, t6
+};
+
 class Hart
 {
     private:
-        int m_pc;
+        RegVal m_pc;
         RegVal m_reg[32];
+        RegVal m_csr;
         class Memory *m_memory;
 
         void fetch(Instr32raw *buf, ifstream *program, int pc);
@@ -19,7 +31,9 @@ class Hart
         Hart(class Memory *mem);
 
         RegVal get_reg(RegId reg){ return m_reg[reg]; };
+        RegVal get_pc(){ return m_pc; };
         void set_reg(RegId reg, RegVal val){ m_reg[reg] = val; };
+        void set_pc_offset(RegVal offset){ m_pc = m_pc + offset; };
 
         void run();
 };

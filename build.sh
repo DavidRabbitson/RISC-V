@@ -24,8 +24,8 @@ case "$1" in
     exit 0
     ;;
     cpu)
-    echo "g++ cpu.cpp ./source/Executor.cpp ./source/Hart.cpp ./source/Instruction.cpp ./source/Memory.cpp -o cpu"
-    g++ cpu.cpp ./source/Executor.cpp ./source/Hart.cpp ./source/Instruction.cpp ./source/Memory.cpp -o cpu
+    echo "g++ -m32 cpu.cpp ./source/Executor.cpp ./source/Hart.cpp ./source/Instruction.cpp ./source/Memory.cpp -o cpu"
+    g++ -m32 cpu.cpp ./source/Executor.cpp ./source/Hart.cpp ./source/Instruction.cpp ./source/Memory.cpp -o cpu
     exit 0
     ;;
     clean)

@@ -7,9 +7,13 @@
 Hart::Hart(Memory *mem)
 {
     m_pc = 0;
+    m_memory = mem;
+
     for(int i = 0; i < 32; i++)
         m_reg[i] = 0;
-    m_memory = mem;
+
+    m_reg[RegName::s0] = (RegVal)m_memory->get_frame_pointer();
+    m_reg[RegName::sp] = m_reg[RegName::s0];
 };
 
 void Hart::fetch(Instr32raw *buf, ifstream *program, int pc)

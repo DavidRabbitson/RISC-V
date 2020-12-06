@@ -11,9 +11,9 @@ void Executor::execute(Instruction *instr)
 Executor::Executor(Hart *hart)
 {
     m_hart = hart;
-    m_executors[ExecId::LUI]    = &dummy;
-    m_executors[ExecId::AUIPC]  = &dummy;
-    m_executors[ExecId::JAL]    = &dummy;
+    m_executors[ExecId::LUI]    = &lui;
+    m_executors[ExecId::AUIPC]  = &auipc;
+    m_executors[ExecId::JAL]    = &jal;
     m_executors[ExecId::JALR]   = &dummy;
     m_executors[ExecId::BEQ]    = &dummy;
     m_executors[ExecId::BNE]    = &dummy;
@@ -30,22 +30,22 @@ Executor::Executor(Hart *hart)
     m_executors[ExecId::SH]     = &dummy;
     m_executors[ExecId::SW]     = &dummy;
     m_executors[ExecId::ADDI]   = &addi;
-    m_executors[ExecId::SLTI]   = &dummy;
-    m_executors[ExecId::SLTIU]  = &dummy;
+    m_executors[ExecId::SLTI]   = &slti;
+    m_executors[ExecId::SLTIU]  = &sltiu;
     m_executors[ExecId::XORI]   = &xori;
     m_executors[ExecId::ORI]    = &ori;
     m_executors[ExecId::ANDI]   = &andi;
-    m_executors[ExecId::SLLI]   = &dummy;
-    m_executors[ExecId::SRLI]   = &dummy;
-    m_executors[ExecId::SRAI]   = &dummy;
+    m_executors[ExecId::SLLI]   = &slli;
+    m_executors[ExecId::SRLI]   = &srli;
+    m_executors[ExecId::SRAI]   = &srai;
     m_executors[ExecId::ADD]    = &add;
     m_executors[ExecId::SUB]    = &sub;
-    m_executors[ExecId::SLL]    = &dummy;
-    m_executors[ExecId::SLT]    = &dummy;
-    m_executors[ExecId::SLTU]   = &dummy;
+    m_executors[ExecId::SLL]    = &sll;
+    m_executors[ExecId::SLT]    = &slt;
+    m_executors[ExecId::SLTU]   = &sltu;
     m_executors[ExecId::XOR]    = &m_xor;
-    m_executors[ExecId::SRL]    = &dummy;
-    m_executors[ExecId::SRA]    = &dummy;
+    m_executors[ExecId::SRL]    = &srl;
+    m_executors[ExecId::SRA]    = &sra;
     m_executors[ExecId::OR]     = &m_or;
     m_executors[ExecId::AND]    = &m_and;
     m_executors[ExecId::FENCE]  = &dummy;
@@ -63,14 +63,27 @@ Executor::Executor(Hart *hart)
 
 void dummy(Hart *hart, Instruction *instr){ /*printf("\nDUMMY\n\n"); */};
 
-void lui   (Hart *hart, Instruction *instr){};
+void lui(Hart *hart, Instruction *instr)
+{
+    hart->set_reg(instr->get_rd(), instr->get_imm() << 12);
+};
 
-void auipc (Hart *hart, Instruction *instr){};
+void auipc (Hart *hart, Instruction *instr)
+{
+    RegVal offset = instr->get_imm() << 12 + hart->get_pc();
+    hart->set_reg(instr->get_rd(), offset);
+};
 
 //-------------------------------------------------------------------
 //BRANCHES
 
-void jal   (Hart *hart, Instruction *instr){};
+void jal(Hart *hart, Instruction *instr)
+{
+    hart->set_reg(instr->get_rd(), hart->get_pc() + 4);
+    RegVal offset = instr->get_imm();
+    offset = ((offset & 0x80000) + ((offset << 9) & 0x7fe00) + ((offset >> 2) & 0x00100) + ((offset >> 11) & 0x000ff)) << 1;
+    hart->set_pc_offset(offset);
+};
 
 void jalr  (Hart *hart, Instruction *instr){};
 
@@ -114,9 +127,17 @@ void addi(Hart *hart, Instruction *instr)
     hart->set_reg(instr->get_rd(), res);
 };
 
-void slti  (Hart *hart, Instruction *instr){};
+void slti(Hart *hart, Instruction *instr)
+{
+    RegVal res = (SignedRegVal)(hart->get_reg(instr->get_rs1())) < (SignedRegVal)(instr->get_imm());
+    hart->set_reg(instr->get_rd(), res);
+};
 
-void sltiu (Hart *hart, Instruction *instr){};
+void sltiu(Hart *hart, Instruction *instr)
+{
+    RegVal res = (hart->get_reg(instr->get_rs1())) < (instr->get_imm());
+    hart->set_reg(instr->get_rd(), res);
+};
 
 void xori(Hart *hart, Instruction *instr)
 {
@@ -136,32 +157,56 @@ void andi(Hart *hart, Instruction *instr)
     hart->set_reg(instr->get_rd(), res);
 };
 
-void slli  (Hart *hart, Instruction *instr){};
+void slli(Hart *hart, Instruction *instr)
+{
+    RegVal res = (hart->get_reg(instr->get_rs1()) << hart->get_reg(instr->get_rs2())) & 0x1f;
+    hart->set_reg(instr->get_rd(), res);
+};
 
-void srli  (Hart *hart, Instruction *instr){};
+void srli(Hart *hart, Instruction *instr)
+{
+    RegVal res = (hart->get_reg(instr->get_rs1())) >> hart->get_reg(instr->get_rs2());
+    hart->set_reg(instr->get_rd(), res);
+};
 
-void srai  (Hart *hart, Instruction *instr){};
+void srai(Hart *hart, Instruction *instr)
+{
+    RegVal res = (SignedRegVal)(hart->get_reg(instr->get_rs1())) >> hart->get_reg(instr->get_rs2());
+    hart->set_reg(instr->get_rd(), res);
+};
 
 //-------------------------------------------------------------------
 //  REGISTER ARITHMETICS
 
 void add(Hart *hart, Instruction *instr)
 {
-    RegVal res = hart->get_reg(instr->get_rs1()) + hart->get_reg(instr->get_rs2());
+    RegVal res = (hart->get_reg(instr->get_rs1()) + hart->get_reg(instr->get_rs2())) & 0x1f;
     hart->set_reg(instr->get_rd(), res);
 };
 
 void sub(Hart *hart, Instruction *instr)
 {
-    RegVal res = hart->get_reg(instr->get_rs1()) - hart->get_reg(instr->get_rs2());
+    RegVal res = (hart->get_reg(instr->get_rs1()) - hart->get_reg(instr->get_rs2())) & 0x1f;
     hart->set_reg(instr->get_rd(), res);
 };
 
-void sll   (Hart *hart, Instruction *instr){};
+void sll(Hart *hart, Instruction *instr)
+{
+    RegVal res = (hart->get_reg(instr->get_rs1()) << hart->get_reg(instr->get_rs2())) & 0x1f;
+    hart->set_reg(instr->get_rd(), res);
+};
 
-void slt   (Hart *hart, Instruction *instr){};
+void slt(Hart *hart, Instruction *instr)
+{
+    RegVal res = (SignedRegVal)(hart->get_reg(instr->get_rs1())) < (SignedRegVal)(hart->get_reg(instr->get_rs2()));
+    hart->set_reg(instr->get_rd(), res);
+};
 
-void sltu  (Hart *hart, Instruction *instr){};
+void sltu(Hart *hart, Instruction *instr)
+{
+    RegVal res = hart->get_reg(instr->get_rs1()) < hart->get_reg(instr->get_rs2());
+    hart->set_reg(instr->get_rd(), res);
+};
 
 void m_xor(Hart *hart, Instruction *instr)
 {
@@ -169,9 +214,17 @@ void m_xor(Hart *hart, Instruction *instr)
     hart->set_reg(instr->get_rd(), res);
 };
 
-void srl(Hart *hart, Instruction *instr){};
+void srl(Hart *hart, Instruction *instr)
+{
+    RegVal res = hart->get_reg(instr->get_rs1()) >> hart->get_reg(instr->get_rs2());
+    hart->set_reg(instr->get_rd(), res);
+};
 
-void sra(Hart *hart, Instruction *instr){};
+void sra(Hart *hart, Instruction *instr)
+{
+    RegVal res = (SignedRegVal)(hart->get_reg(instr->get_rs1())) >> hart->get_reg(instr->get_rs2());
+    hart->set_reg(instr->get_rd(), res);
+};
 
 void m_or(Hart *hart, Instruction *instr)
 {

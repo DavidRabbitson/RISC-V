@@ -7,9 +7,14 @@ class Memory
 {
     private:
         ifstream *m_program;
+        RegVal *m_stack;
     public:
-        Memory(ifstream *program){ m_program = program; };
-        ifstream *get_prog_mem(){ return m_program; };
+        Memory(ifstream *program);
+
+        ifstream *get_prog_mem();
+        RegVal *get_frame_pointer();
+
+        ~Memory();
 };
 
 #endif

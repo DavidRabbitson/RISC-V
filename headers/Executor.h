@@ -28,11 +28,11 @@ class Executor
 };
 
 void dummy (Hart *hart, Instruction *instr);//implemented
-void lui   (Hart *hart, Instruction *instr);
-void auipc (Hart *hart, Instruction *instr);
+void lui   (Hart *hart, Instruction *instr);//implemented
+void auipc (Hart *hart, Instruction *instr);//implemented
 
 //BRANCHES
-void jal   (Hart *hart, Instruction *instr);
+void jal   (Hart *hart, Instruction *instr);//implemented?
 void jalr  (Hart *hart, Instruction *instr);
 void beq   (Hart *hart, Instruction *instr);
 void bne   (Hart *hart, Instruction *instr);
@@ -53,24 +53,24 @@ void sw    (Hart *hart, Instruction *instr);
 
 //IMMEDIATE ARITHMETICS
 void addi  (Hart *hart, Instruction *instr);//implemented
-void slti  (Hart *hart, Instruction *instr);
-void sltiu (Hart *hart, Instruction *instr);
+void slti  (Hart *hart, Instruction *instr);//implemented
+void sltiu (Hart *hart, Instruction *instr);//implemented
 void xori  (Hart *hart, Instruction *instr);//implemented
 void ori   (Hart *hart, Instruction *instr);//implemented
 void andi  (Hart *hart, Instruction *instr);//implemented
-void slli  (Hart *hart, Instruction *instr);
-void srli  (Hart *hart, Instruction *instr);
-void srai  (Hart *hart, Instruction *instr);
+void slli  (Hart *hart, Instruction *instr);//implemented
+void srli  (Hart *hart, Instruction *instr);//implemented
+void srai  (Hart *hart, Instruction *instr);//implemented
 
 //REGISTER ARITHMETICS
 void add   (Hart *hart, Instruction *instr);//implemented
 void sub   (Hart *hart, Instruction *instr);//implemented
-void sll   (Hart *hart, Instruction *instr);
-void slt   (Hart *hart, Instruction *instr);
-void sltu  (Hart *hart, Instruction *instr);
+void sll   (Hart *hart, Instruction *instr);//implemented
+void slt   (Hart *hart, Instruction *instr);//implemented
+void sltu  (Hart *hart, Instruction *instr);//implemented
 void m_xor (Hart *hart, Instruction *instr);//implemented
-void srl   (Hart *hart, Instruction *instr);
-void sra   (Hart *hart, Instruction *instr);
+void srl   (Hart *hart, Instruction *instr);//implemented
+void sra   (Hart *hart, Instruction *instr);//implemented
 void m_or  (Hart *hart, Instruction *instr);//implemented
 void m_and (Hart *hart, Instruction *instr);//implemented
 
