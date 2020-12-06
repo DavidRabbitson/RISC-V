@@ -6,7 +6,7 @@
 
 int main()
 {
-    ifstream rf("test.bin", ios::out | ios::binary);
+    ifstream rf("queens.bin", ios::out | ios::binary);
     if(!rf)
         cout << "Cannot open file!" << endl;
 

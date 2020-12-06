@@ -32,22 +32,22 @@ Executor::Executor(Hart *hart)
     m_executors[ExecId::ADDI]   = &addi;
     m_executors[ExecId::SLTI]   = &dummy;
     m_executors[ExecId::SLTIU]  = &dummy;
-    m_executors[ExecId::XORI]   = &dummy;
-    m_executors[ExecId::ORI]    = &dummy;
-    m_executors[ExecId::ANDI]   = &dummy;
+    m_executors[ExecId::XORI]   = &xori;
+    m_executors[ExecId::ORI]    = &ori;
+    m_executors[ExecId::ANDI]   = &andi;
     m_executors[ExecId::SLLI]   = &dummy;
     m_executors[ExecId::SRLI]   = &dummy;
     m_executors[ExecId::SRAI]   = &dummy;
     m_executors[ExecId::ADD]    = &add;
-    m_executors[ExecId::SUB]    = &dummy;
+    m_executors[ExecId::SUB]    = &sub;
     m_executors[ExecId::SLL]    = &dummy;
     m_executors[ExecId::SLT]    = &dummy;
     m_executors[ExecId::SLTU]   = &dummy;
-    m_executors[ExecId::XOR]    = &dummy;
+    m_executors[ExecId::XOR]    = &m_xor;
     m_executors[ExecId::SRL]    = &dummy;
     m_executors[ExecId::SRA]    = &dummy;
-    m_executors[ExecId::OR]     = &dummy;
-    m_executors[ExecId::AND]    = &dummy;
+    m_executors[ExecId::OR]     = &m_or;
+    m_executors[ExecId::AND]    = &m_and;
     m_executors[ExecId::FENCE]  = &dummy;
     m_executors[ExecId::FENCEi] = &dummy;
     m_executors[ExecId::ECALL]  = &dummy;
@@ -61,24 +61,153 @@ Executor::Executor(Hart *hart)
     m_executors[ExecId::FAULT]  = &dummy;
 };
 
-void dummy(Hart *hart, Instruction *instr){ printf("\nDUMMY\n\n"); };
+void dummy(Hart *hart, Instruction *instr){ /*printf("\nDUMMY\n\n"); */};
+
+void lui   (Hart *hart, Instruction *instr){};
+
+void auipc (Hart *hart, Instruction *instr){};
+
+//-------------------------------------------------------------------
+//BRANCHES
+
+void jal   (Hart *hart, Instruction *instr){};
+
+void jalr  (Hart *hart, Instruction *instr){};
+
+void beq   (Hart *hart, Instruction *instr){};
+
+void bne   (Hart *hart, Instruction *instr){};
+
+void blt   (Hart *hart, Instruction *instr){};
+
+void bge   (Hart *hart, Instruction *instr){};
+
+void bltu  (Hart *hart, Instruction *instr){};
+
+void bgeu  (Hart *hart, Instruction *instr){};
+
+//-------------------------------------------------------------------
+//  LOADS AND STORES
+
+void lb    (Hart *hart, Instruction *instr){};
+
+void lh    (Hart *hart, Instruction *instr){};
+
+void lw    (Hart *hart, Instruction *instr){};
+
+void lbu   (Hart *hart, Instruction *instr){};
+
+void lhu   (Hart *hart, Instruction *instr){};
+
+void sb    (Hart *hart, Instruction *instr){};
+
+void sh    (Hart *hart, Instruction *instr){};
+
+void sw    (Hart *hart, Instruction *instr){};
+
+//-------------------------------------------------------------------
+//  IMMEDIATE ARITHMETICS
 
 void addi(Hart *hart, Instruction *instr)
 {
-    printf("\nInital register values: r%d = %d, r%d = %d\n", instr->get_rs1(), hart->get_reg(instr->get_rs1()), instr->get_rd(), hart->get_reg(instr->get_rd()));
-    printf("Adding immediate %d to r%d and storing in r%d\n", instr->get_imm(), instr->get_rs1(), instr->get_rd());
-
-    RegVal sum = hart->get_reg(instr->get_rs1()) + instr->get_imm();
-    printf("sum = %d\n", sum);
-
-    hart->set_reg(instr->get_rd(), sum);
-
-    printf("Result: r%d = %d\n\n", instr->get_rd(), hart->get_reg(instr->get_rd()));
+    RegVal res = (hart->get_reg(instr->get_rs1()) + instr->get_imm()) & 0x1f;
+    hart->set_reg(instr->get_rd(), res);
 };
+
+void slti  (Hart *hart, Instruction *instr){};
+
+void sltiu (Hart *hart, Instruction *instr){};
+
+void xori(Hart *hart, Instruction *instr)
+{
+    RegVal res = (hart->get_reg(instr->get_rs1()) ^ instr->get_imm()) & 0x1f;
+    hart->set_reg(instr->get_rd(), res);
+};
+
+void ori(Hart *hart, Instruction *instr)
+{
+    RegVal res = (hart->get_reg(instr->get_rs1()) | instr->get_imm()) & 0x1f;
+    hart->set_reg(instr->get_rd(), res);
+};
+
+void andi(Hart *hart, Instruction *instr)
+{
+    RegVal res = (hart->get_reg(instr->get_rs1()) & instr->get_imm()) & 0x1f;
+    hart->set_reg(instr->get_rd(), res);
+};
+
+void slli  (Hart *hart, Instruction *instr){};
+
+void srli  (Hart *hart, Instruction *instr){};
+
+void srai  (Hart *hart, Instruction *instr){};
+
+//-------------------------------------------------------------------
+//  REGISTER ARITHMETICS
 
 void add(Hart *hart, Instruction *instr)
 {
-    RegVal sum = hart->get_reg(instr->get_rs1()) + hart->get_reg(instr->get_rs2());
-    hart->set_reg(instr->get_rd(), sum);
+    RegVal res = hart->get_reg(instr->get_rs1()) + hart->get_reg(instr->get_rs2());
+    hart->set_reg(instr->get_rd(), res);
 };
+
+void sub(Hart *hart, Instruction *instr)
+{
+    RegVal res = hart->get_reg(instr->get_rs1()) - hart->get_reg(instr->get_rs2());
+    hart->set_reg(instr->get_rd(), res);
+};
+
+void sll   (Hart *hart, Instruction *instr){};
+
+void slt   (Hart *hart, Instruction *instr){};
+
+void sltu  (Hart *hart, Instruction *instr){};
+
+void m_xor(Hart *hart, Instruction *instr)
+{
+    RegVal res = hart->get_reg(instr->get_rs1()) ^ hart->get_reg(instr->get_rs2());
+    hart->set_reg(instr->get_rd(), res);
+};
+
+void srl(Hart *hart, Instruction *instr){};
+
+void sra(Hart *hart, Instruction *instr){};
+
+void m_or(Hart *hart, Instruction *instr)
+{
+    RegVal res = hart->get_reg(instr->get_rs1()) | hart->get_reg(instr->get_rs2());
+    hart->set_reg(instr->get_rd(), res);
+};
+
+void m_and(Hart *hart, Instruction *instr)
+{
+    RegVal res = hart->get_reg(instr->get_rs1()) & hart->get_reg(instr->get_rs2());
+    hart->set_reg(instr->get_rd(), res);
+};
+
+//-------------------------------------------------------------------
+//  SYSTEM CALLS
+
+void fence (Hart *hart, Instruction *instr){};
+
+void fencei(Hart *hart, Instruction *instr){};
+
+void ecall (Hart *hart, Instruction *instr){};
+
+void ebreak(Hart *hart, Instruction *instr){};
+
+//-------------------------------------------------------------------
+//  CONTROL AND STATUS REGISTER COMMANDS
+
+void csrrw (Hart *hart, Instruction *instr){};
+
+void csrrs (Hart *hart, Instruction *instr){};
+
+void csrrc (Hart *hart, Instruction *instr){};
+
+void csrrwi(Hart *hart, Instruction *instr){};
+
+void csrrsi(Hart *hart, Instruction *instr){};
+
+void csrrci(Hart *hart, Instruction *instr){};
 

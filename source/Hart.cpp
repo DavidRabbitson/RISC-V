@@ -44,7 +44,7 @@ void Hart::run()
         if(memory->eof())
             break;
 
-        printf("PC[0x%04x]\t0x%08x", m_pc, raw);
+        printf("PC[0x%06x]\t0x%08x", m_pc, raw);
 
         decode(&instr, raw);
 
