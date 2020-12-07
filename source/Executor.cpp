@@ -70,7 +70,7 @@ void lui(Hart *hart, Instruction *instr)
 
 void auipc (Hart *hart, Instruction *instr)
 {
-    RegVal offset = instr->get_imm() << 12 + hart->get_pc();
+    RegVal offset = (instr->get_imm() << 12) + hart->get_pc();
     hart->set_reg(instr->get_rd(), offset);
 };
 
