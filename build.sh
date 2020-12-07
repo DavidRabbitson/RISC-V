@@ -3,8 +3,8 @@ if [[ $PATH != *":/opt/riscv/bin"* ]]; then
 fi
 
 if [ $# -eq 0 ]; then
-    echo "g++ cpu.cpp ./source/Executor.cpp ./source/Hart.cpp ./source/Instruction.cpp ./source/Memory.cpp -o cpu"
-    g++ cpu.cpp ./source/Executor.cpp ./source/Hart.cpp ./source/Instruction.cpp ./source/Memory.cpp -o cpu
+    echo "g++ -m32 cpu.cpp ./source/Executor.cpp ./source/Hart.cpp ./source/Instruction.cpp ./source/Memory.cpp -o cpu"
+    g++ -m32 cpu.cpp ./source/Executor.cpp ./source/Hart.cpp ./source/Instruction.cpp ./source/Memory.cpp -o cpu
     exit 0
 fi
 
@@ -16,6 +16,7 @@ case "$1" in
     riscv32-unknown-elf-objcopy --dump-section .text=test.bin test
     exit 0
     ;;
+
     queens)
     echo "riscv32-unknown-elf-gcc -Wl,-Ttext=0x0 8-queens.c -o queens"
     riscv32-unknown-elf-gcc -Wl,-Ttext=0x0 8-queens.c -o queens
@@ -23,11 +24,13 @@ case "$1" in
     riscv32-unknown-elf-objcopy --dump-section .text=queens.bin queens
     exit 0
     ;;
+
     cpu)
     echo "g++ -m32 cpu.cpp ./source/Executor.cpp ./source/Hart.cpp ./source/Instruction.cpp ./source/Memory.cpp -o cpu"
     g++ -m32 cpu.cpp ./source/Executor.cpp ./source/Hart.cpp ./source/Instruction.cpp ./source/Memory.cpp -o cpu
     exit 0
     ;;
+
     clean)
     echo "rm test.bin"
     rm test.bin
@@ -41,6 +44,7 @@ case "$1" in
     rm cpu
     exit 0
     ;;
+
     -h|--help)
     echo "no args: Build cpu."
     echo "test:    Build test."
@@ -49,6 +53,7 @@ case "$1" in
     echo "-h|--help: Show this message."
     exit 0
     ;;
+
     *)
     echo "Invalid argument. Try running \"./build.sh -h\""
     exit 1
