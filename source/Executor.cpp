@@ -21,14 +21,14 @@ Executor::Executor(Hart *hart)
     m_executors[ExecId::BGE]    = &dummy;
     m_executors[ExecId::BLTU]   = &dummy;
     m_executors[ExecId::BGEU]   = &dummy;
-    m_executors[ExecId::LB]     = &dummy;
-    m_executors[ExecId::LH]     = &dummy;
-    m_executors[ExecId::LW]     = &dummy;
-    m_executors[ExecId::LBU]    = &dummy;
-    m_executors[ExecId::LHU]    = &dummy;
-    m_executors[ExecId::SB]     = &dummy;
-    m_executors[ExecId::SH]     = &dummy;
-    m_executors[ExecId::SW]     = &dummy;
+    m_executors[ExecId::LB]     = &lb;
+    m_executors[ExecId::LH]     = &lh;
+    m_executors[ExecId::LW]     = &lw;
+    m_executors[ExecId::LBU]    = &lbu;
+    m_executors[ExecId::LHU]    = &lhu;
+    m_executors[ExecId::SB]     = &sb;
+    m_executors[ExecId::SH]     = &sh;
+    m_executors[ExecId::SW]     = &sw;
     m_executors[ExecId::ADDI]   = &addi;
     m_executors[ExecId::SLTI]   = &slti;
     m_executors[ExecId::SLTIU]  = &sltiu;
@@ -79,10 +79,12 @@ void auipc (Hart *hart, Instruction *instr)
 
 void jal(Hart *hart, Instruction *instr)
 {
+	/*
     hart->set_reg(instr->get_rd(), hart->get_pc() + 4);
     RegVal offset = instr->get_imm();
     offset = ((offset & 0x80000) + ((offset << 9) & 0x7fe00) + ((offset >> 2) & 0x00100) + ((offset >> 11) & 0x000ff)) << 1;
     hart->set_pc_offset(offset);
+	// */
 };
 
 void jalr  (Hart *hart, Instruction *instr){};
@@ -102,21 +104,45 @@ void bgeu  (Hart *hart, Instruction *instr){};
 //-------------------------------------------------------------------
 //  LOADS AND STORES
 
-void lb    (Hart *hart, Instruction *instr){};
+void lb    (Hart *hart, Instruction *instr)
+{
+	hart->dram_read(instr.m_rs1, instr->m_rd, sizeof(Byte));
+};
 
-void lh    (Hart *hart, Instruction *instr){};
+void lh    (Hart *hart, Instruction *instr)
+{
+	hart->dram_read(instr.m_rs1, instr->m_rd, sizeof(HalfWord));
+};
 
-void lw    (Hart *hart, Instruction *instr){};
+void lw    (Hart *hart, Instruction *instr)
+{
+	hart->dram_read(instr.m_rs1, instr->m_rd, sizeof(Word));
+};
 
-void lbu   (Hart *hart, Instruction *instr){};
+void lbu   (Hart *hart, Instruction *instr)
+{
+	hart->dram_read(instr.m_rs1, instr->m_rd, sizeof(Byte));		// ???
+};
 
-void lhu   (Hart *hart, Instruction *instr){};
+void lhu   (Hart *hart, Instruction *instr)
+{
+	hart->dram_read(instr.m_rs1, instr->m_rd, sizeof(HalfWord));	// ???
+};
 
-void sb    (Hart *hart, Instruction *instr){};
+void sb    (Hart *hart, Instruction *instr)
+{
+	hart->dram_write(instr.m_rs2, instr->m_rs1, sizeof(Byte));
+};
 
-void sh    (Hart *hart, Instruction *instr){};
+void sh    (Hart *hart, Instruction *instr)
+{
+	hart->dram_write(instr.m_rs2, instr->m_rs1, sizeof(HalfWord));
+};
 
-void sw    (Hart *hart, Instruction *instr){};
+void sw    (Hart *hart, Instruction *instr)
+{
+	hart->dram_write(instr.m_rs2, instr->m_rs1, sizeof(Word));
+};
 
 //-------------------------------------------------------------------
 //  IMMEDIATE ARITHMETICS

@@ -42,14 +42,14 @@ void bltu  (Hart *hart, Instruction *instr);
 void bgeu  (Hart *hart, Instruction *instr);
 
 //LOADS AND STORES
-void lb    (Hart *hart, Instruction *instr);
-void lh    (Hart *hart, Instruction *instr);
-void lw    (Hart *hart, Instruction *instr);
-void lbu   (Hart *hart, Instruction *instr);
-void lhu   (Hart *hart, Instruction *instr);
-void sb    (Hart *hart, Instruction *instr);
-void sh    (Hart *hart, Instruction *instr);
-void sw    (Hart *hart, Instruction *instr);
+void lb    (Hart *hart, Instruction *instr);//need test
+void lh    (Hart *hart, Instruction *instr);//need test
+void lw    (Hart *hart, Instruction *instr);//need test
+void lbu   (Hart *hart, Instruction *instr);//need test
+void lhu   (Hart *hart, Instruction *instr);//need test
+void sb    (Hart *hart, Instruction *instr);//need test
+void sh    (Hart *hart, Instruction *instr);//need test
+void sw    (Hart *hart, Instruction *instr);//need test
 
 //IMMEDIATE ARITHMETICS
 void addi  (Hart *hart, Instruction *instr);//implemented
