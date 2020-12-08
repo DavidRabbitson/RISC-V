@@ -13,7 +13,7 @@ int main()
     Memory mem(&rf);
 
     Hart cpu(&mem);
-    cpu.run();
+    //cpu.run();
 
     rf.close();
 
