@@ -79,10 +79,14 @@ void auipc (Hart *hart, Instruction *instr)
 
 void jal(Hart *hart, Instruction *instr)
 {
-    hart->set_reg(instr->get_rd(), hart->get_pc() + 4);
+    RegVal offset = instr->get_imm();
+    printf("\nOFFSET = %x\n\n", offset);
+    offset = ((offset & 0x80000) + ((offset << 9) & 0x7fe00) + ((offset >> 2) & 0x00100) + ((offset >> 11) & 0x000ff)) << 1;
+    printf("\nOFFSET = %x\n\n", offset);
+    /*hart->set_reg(instr->get_rd(), hart->get_pc() + 4);
     RegVal offset = instr->get_imm();
     offset = ((offset & 0x80000) + ((offset << 9) & 0x7fe00) + ((offset >> 2) & 0x00100) + ((offset >> 11) & 0x000ff)) << 1;
-    hart->set_pc_offset(offset);
+    hart->set_pc_offset(offset);*/
 };
 
 void jalr  (Hart *hart, Instruction *instr){};
@@ -241,26 +245,26 @@ void m_and(Hart *hart, Instruction *instr)
 //-------------------------------------------------------------------
 //  SYSTEM CALLS
 
-void fence (Hart *hart, Instruction *instr){};
+void fence (Hart *hart, Instruction *instr){printf("\nSYSTEM CALL\n\n");};
 
-void fencei(Hart *hart, Instruction *instr){};
+void fencei(Hart *hart, Instruction *instr){printf("\nSYSTEM CALL\n\n");};
 
-void ecall (Hart *hart, Instruction *instr){};
+void ecall (Hart *hart, Instruction *instr){printf("\nSYSTEM CALL\n\n");};
 
-void ebreak(Hart *hart, Instruction *instr){};
+void ebreak(Hart *hart, Instruction *instr){printf("\nSYSTEM CALL\n\n");};
 
 //-------------------------------------------------------------------
 //  CONTROL AND STATUS REGISTER COMMANDS
 
-void csrrw (Hart *hart, Instruction *instr){};
+void csrrw (Hart *hart, Instruction *instr){printf("\nSYSTEM CALL\n\n");};
 
-void csrrs (Hart *hart, Instruction *instr){};
+void csrrs (Hart *hart, Instruction *instr){printf("\nSYSTEM CALL\n\n");};
 
-void csrrc (Hart *hart, Instruction *instr){};
+void csrrc (Hart *hart, Instruction *instr){printf("\nSYSTEM CALL\n\n");};
 
-void csrrwi(Hart *hart, Instruction *instr){};
+void csrrwi(Hart *hart, Instruction *instr){printf("\nSYSTEM CALL\n\n");};
 
-void csrrsi(Hart *hart, Instruction *instr){};
+void csrrsi(Hart *hart, Instruction *instr){printf("\nSYSTEM CALL\n\n");};
 
-void csrrci(Hart *hart, Instruction *instr){};
+void csrrci(Hart *hart, Instruction *instr){printf("\nSYSTEM CALL\n\n");};
 
