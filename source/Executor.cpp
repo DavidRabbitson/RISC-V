@@ -79,10 +79,12 @@ void auipc (Hart *hart, Instruction *instr)
 
 void jal(Hart *hart, Instruction *instr)
 {
+	/*
     hart->set_reg(instr->get_rd(), hart->get_pc() + 4);
     RegVal offset = instr->get_imm();
     offset = ((offset & 0x80000) + ((offset << 9) & 0x7fe00) + ((offset >> 2) & 0x00100) + ((offset >> 11) & 0x000ff)) << 1;
     hart->set_pc_offset(offset);
+	// */
 };
 
 void jalr  (Hart *hart, Instruction *instr){};
