@@ -14,13 +14,13 @@ Executor::Executor(Hart *hart)
     m_executors[ExecId::LUI]    = &lui;
     m_executors[ExecId::AUIPC]  = &auipc;
     m_executors[ExecId::JAL]    = &jal;
-    m_executors[ExecId::JALR]   = &dummy;
-    m_executors[ExecId::BEQ]    = &dummy;
-    m_executors[ExecId::BNE]    = &dummy;
-    m_executors[ExecId::BLT]    = &dummy;
-    m_executors[ExecId::BGE]    = &dummy;
-    m_executors[ExecId::BLTU]   = &dummy;
-    m_executors[ExecId::BGEU]   = &dummy;
+    m_executors[ExecId::JALR]   = &jalr;
+    m_executors[ExecId::BEQ]    = &beq;
+    m_executors[ExecId::BNE]    = &bne;
+    m_executors[ExecId::BLT]    = &blt;
+    m_executors[ExecId::BGE]    = &bge;
+    m_executors[ExecId::BLTU]   = &bltu;
+    m_executors[ExecId::BGEU]   = &bgeu;
     m_executors[ExecId::LB]     = &lb;
     m_executors[ExecId::LH]     = &lh;
     m_executors[ExecId::LW]     = &lw;
@@ -70,7 +70,7 @@ void lui(Hart *hart, Instruction *instr)
 
 void auipc (Hart *hart, Instruction *instr)
 {
-    RegVal offset = instr->get_imm() << 12 + hart->get_pc();
+    RegVal offset = (instr->get_imm() << 12) + hart->get_pc();
     hart->set_reg(instr->get_rd(), offset);
 };
 
@@ -79,27 +79,154 @@ void auipc (Hart *hart, Instruction *instr)
 
 void jal(Hart *hart, Instruction *instr)
 {
-	/*
-    hart->set_reg(instr->get_rd(), hart->get_pc() + 4);
     RegVal offset = instr->get_imm();
-    offset = ((offset & 0x80000) + ((offset << 9) & 0x7fe00) + ((offset >> 2) & 0x00100) + ((offset >> 11) & 0x000ff)) << 1;
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), hart->get_pc() + 4);
+
+    offset = ((offset & 0x80000) +     ((offset >> 9) & 0x3ff) + \
+             ((offset & 0x100) << 2) + ((offset & 0xff) << 11)) << 1;
+
+    if(offset & 0x100000)
+        offset += 0xffe00000;
+
+    printf("\nNEXT PC = %x\n\n", offset + hart->get_pc());
     hart->set_pc_offset(offset);
-	// */
 };
 
-void jalr  (Hart *hart, Instruction *instr){};
+void jalr(Hart *hart, Instruction *instr)
+{
+    RegVal offset = instr->get_imm();
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), hart->get_pc() + 4);
 
-void beq   (Hart *hart, Instruction *instr){};
+    if(offset & 0x800)
+        offset += 0xfffff000;
+    offset &= 0xfffffffe;
 
-void bne   (Hart *hart, Instruction *instr){};
+    printf("\nNEXT PC = %x\n\n", offset + hart->get_pc());
+    //hart->print_regs();
 
-void blt   (Hart *hart, Instruction *instr){};
+    if(offset == 0)
+        offset = 4;
 
-void bge   (Hart *hart, Instruction *instr){};
+    hart->set_pc_offset(offset);
+};
 
-void bltu  (Hart *hart, Instruction *instr){};
+void beq(Hart *hart, Instruction *instr)
+{
+    RegVal offset = (instr->get_imm() << 5) + instr->get_rd();
 
-void bgeu  (Hart *hart, Instruction *instr){};
+    offset = ((offset & 0x800) + ((offset & 0x7fe) >> 1) + \
+             ((offset & 0x001) << 10)) << 1;
+
+    if(offset & 0x1000)
+        offset += 0xffffe000;
+
+    if(hart->get_reg(instr->get_rs1()) == hart->get_reg(instr->get_rs2()))
+    {
+        printf("\nNEXT PC = %x\n\n", offset + hart->get_pc());
+        hart->set_pc_offset(offset);
+    }
+    else
+        hart->set_pc_offset(4);
+};
+
+void bne(Hart *hart, Instruction *instr)
+{
+    RegVal offset = (instr->get_imm() << 5) + instr->get_rd();
+
+    offset = ((offset & 0x800) + ((offset & 0x7fe) >> 1) + \
+             ((offset & 0x001) << 10)) << 1;
+
+    if(offset & 0x1000)
+        offset += 0xffffe000;
+    
+    if(hart->get_reg(instr->get_rs1()) != hart->get_reg(instr->get_rs2()))
+    {
+        printf("\nNEXT PC = %x\n\n", offset + hart->get_pc());
+        hart->set_pc_offset(offset);
+    }
+    else
+        hart->set_pc_offset(4);
+};
+
+void blt(Hart *hart, Instruction *instr)
+{
+    RegVal offset = (instr->get_imm() << 5) + instr->get_rd();
+
+    offset = ((offset & 0x800) + ((offset & 0x7fe) >> 1) + \
+             ((offset & 0x001) << 10)) << 1;
+
+    if(offset & 0x1000)
+        offset += 0xffffe000;
+
+    if((SignedRegVal)hart->get_reg(instr->get_rs1()) < \
+       (SignedRegVal)hart->get_reg(instr->get_rs2()))
+    {
+        printf("\nNEXT PC = %x\n\n", offset + hart->get_pc());
+        hart->set_pc_offset(offset);
+    }
+    else
+        hart->set_pc_offset(4);
+};
+
+void bge(Hart *hart, Instruction *instr)
+{
+    RegVal offset = (instr->get_imm() << 5) + instr->get_rd();
+
+    offset = ((offset & 0x800) + ((offset & 0x7fe) >> 1) + \
+             ((offset & 0x001) << 10)) << 1;
+
+    if(offset & 0x1000)
+        offset += 0xffffe000;
+
+    if((SignedRegVal)hart->get_reg(instr->get_rs1()) >= \
+       (SignedRegVal)hart->get_reg(instr->get_rs2()))
+    {
+        printf("\nNEXT PC = %x\n\n", offset + hart->get_pc());
+        hart->set_pc_offset(offset);
+    }
+    else
+        hart->set_pc_offset(4);
+};
+
+void bltu(Hart *hart, Instruction *instr)
+{
+    RegVal offset = (instr->get_imm() << 5) + instr->get_rd();
+
+    offset = ((offset & 0x800) + ((offset & 0x7fe) >> 1) + \
+             ((offset & 0x001) << 10)) << 1;
+
+    if(offset & 0x1000)
+        offset += 0xffffe000;
+
+    if(hart->get_reg(instr->get_rs1()) < hart->get_reg(instr->get_rs2()))
+    {
+        printf("\nNEXT PC = %x\n\n", offset + hart->get_pc());
+        hart->set_pc_offset(offset);
+    }
+    else
+        hart->set_pc_offset(4);
+};
+
+void bgeu(Hart *hart, Instruction *instr)
+{
+    RegVal offset = (instr->get_imm() << 5) + instr->get_rd();
+
+    offset = ((offset & 0x800) + ((offset & 0x7fe) >> 1) + \
+             ((offset & 0x001) << 10)) << 1;
+
+    if(offset & 0x1000)
+        offset += 0xffffe000;
+
+    if(hart->get_reg(instr->get_rs1()) >= hart->get_reg(instr->get_rs2()))
+    {
+        printf("\nNEXT PC = %x\n\n", offset + hart->get_pc());
+        hart->set_pc_offset(offset);
+    }
+    else
+        hart->set_pc_offset(4);
+};
 
 //-------------------------------------------------------------------
 //  LOADS AND STORES
@@ -149,56 +276,95 @@ void sw    (Hart *hart, Instruction *instr)
 
 void addi(Hart *hart, Instruction *instr)
 {
-    RegVal res = (hart->get_reg(instr->get_rs1()) + instr->get_imm()) & 0x1f;
-    hart->set_reg(instr->get_rd(), res);
+    RegVal res = instr->get_imm();
+
+    if(res & 0x800)
+        res += 0xfffff000;
+
+    res = hart->get_reg(instr->get_rs1()) + res;
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), res);
 };
 
 void slti(Hart *hart, Instruction *instr)
 {
-    RegVal res = (SignedRegVal)(hart->get_reg(instr->get_rs1())) < (SignedRegVal)(instr->get_imm());
-    hart->set_reg(instr->get_rd(), res);
+    RegVal res = instr->get_imm();
+
+    if(res & 0x800)
+        res += 0xfffff000;
+
+    res = (SignedRegVal)(hart->get_reg(instr->get_rs1())) < (SignedRegVal)(res);
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), res);
 };
 
 void sltiu(Hart *hart, Instruction *instr)
 {
-    RegVal res = (hart->get_reg(instr->get_rs1())) < (instr->get_imm());
-    hart->set_reg(instr->get_rd(), res);
+    RegVal res = instr->get_imm();
+
+    if(res & 0x800)
+        res += 0xfffff000;
+
+    res = hart->get_reg(instr->get_rs1()) < res;
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), res);
 };
 
 void xori(Hart *hart, Instruction *instr)
 {
-    RegVal res = (hart->get_reg(instr->get_rs1()) ^ instr->get_imm()) & 0x1f;
-    hart->set_reg(instr->get_rd(), res);
+    RegVal res = instr->get_imm();
+
+    if(res & 0x800)
+        res += 0xfffff000;
+
+    res = (hart->get_reg(instr->get_rs1()) ^ res);
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), res);
 };
 
 void ori(Hart *hart, Instruction *instr)
 {
-    RegVal res = (hart->get_reg(instr->get_rs1()) | instr->get_imm()) & 0x1f;
-    hart->set_reg(instr->get_rd(), res);
+    RegVal res = instr->get_imm();
+
+    if(res & 0x800)
+        res += 0xfffff000;
+
+    res = hart->get_reg(instr->get_rs1()) | res;
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), res);
 };
 
 void andi(Hart *hart, Instruction *instr)
 {
-    RegVal res = (hart->get_reg(instr->get_rs1()) & instr->get_imm()) & 0x1f;
-    hart->set_reg(instr->get_rd(), res);
+    RegVal res = instr->get_imm();
+
+    if(res & 0x800)
+        res += 0xfffff000;
+
+    res = hart->get_reg(instr->get_rs1()) & res;
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), res);
 };
 
 void slli(Hart *hart, Instruction *instr)
 {
-    RegVal res = (hart->get_reg(instr->get_rs1()) << hart->get_reg(instr->get_rs2())) & 0x1f;
-    hart->set_reg(instr->get_rd(), res);
+    RegVal res = hart->get_reg(instr->get_rs1()) << instr->get_rs2();
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), res);
 };
 
 void srli(Hart *hart, Instruction *instr)
 {
-    RegVal res = (hart->get_reg(instr->get_rs1())) >> hart->get_reg(instr->get_rs2());
-    hart->set_reg(instr->get_rd(), res);
+    RegVal res = hart->get_reg(instr->get_rs1()) >> instr->get_rs2();
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), res);
 };
 
 void srai(Hart *hart, Instruction *instr)
 {
-    RegVal res = (SignedRegVal)(hart->get_reg(instr->get_rs1())) >> hart->get_reg(instr->get_rs2());
-    hart->set_reg(instr->get_rd(), res);
+    RegVal res = (SignedRegVal)(hart->get_reg(instr->get_rs1())) >> instr->get_rs2();
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), res);
 };
 
 //-------------------------------------------------------------------
@@ -206,87 +372,97 @@ void srai(Hart *hart, Instruction *instr)
 
 void add(Hart *hart, Instruction *instr)
 {
-    RegVal res = (hart->get_reg(instr->get_rs1()) + hart->get_reg(instr->get_rs2())) & 0x1f;
-    hart->set_reg(instr->get_rd(), res);
+    RegVal res = (hart->get_reg(instr->get_rs1()) + hart->get_reg(instr->get_rs2())) & 0xffffffff;
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), res);
 };
 
 void sub(Hart *hart, Instruction *instr)
 {
-    RegVal res = (hart->get_reg(instr->get_rs1()) - hart->get_reg(instr->get_rs2())) & 0x1f;
-    hart->set_reg(instr->get_rd(), res);
+    RegVal res = (hart->get_reg(instr->get_rs1()) - hart->get_reg(instr->get_rs2())) & 0xffffffff;
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), res);
 };
 
 void sll(Hart *hart, Instruction *instr)
 {
-    RegVal res = (hart->get_reg(instr->get_rs1()) << hart->get_reg(instr->get_rs2())) & 0x1f;
-    hart->set_reg(instr->get_rd(), res);
+    RegVal res = hart->get_reg(instr->get_rs1()) << hart->get_reg(instr->get_rs2());
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), res);
 };
 
 void slt(Hart *hart, Instruction *instr)
 {
     RegVal res = (SignedRegVal)(hart->get_reg(instr->get_rs1())) < (SignedRegVal)(hart->get_reg(instr->get_rs2()));
-    hart->set_reg(instr->get_rd(), res);
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), res);
 };
 
 void sltu(Hart *hart, Instruction *instr)
 {
     RegVal res = hart->get_reg(instr->get_rs1()) < hart->get_reg(instr->get_rs2());
-    hart->set_reg(instr->get_rd(), res);
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), res);
 };
 
 void m_xor(Hart *hart, Instruction *instr)
 {
     RegVal res = hart->get_reg(instr->get_rs1()) ^ hart->get_reg(instr->get_rs2());
-    hart->set_reg(instr->get_rd(), res);
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), res);
 };
 
 void srl(Hart *hart, Instruction *instr)
 {
     RegVal res = hart->get_reg(instr->get_rs1()) >> hart->get_reg(instr->get_rs2());
-    hart->set_reg(instr->get_rd(), res);
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), res);
 };
 
 void sra(Hart *hart, Instruction *instr)
 {
     RegVal res = (SignedRegVal)(hart->get_reg(instr->get_rs1())) >> hart->get_reg(instr->get_rs2());
-    hart->set_reg(instr->get_rd(), res);
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), res);
 };
 
 void m_or(Hart *hart, Instruction *instr)
 {
     RegVal res = hart->get_reg(instr->get_rs1()) | hart->get_reg(instr->get_rs2());
-    hart->set_reg(instr->get_rd(), res);
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), res);
 };
 
 void m_and(Hart *hart, Instruction *instr)
 {
     RegVal res = hart->get_reg(instr->get_rs1()) & hart->get_reg(instr->get_rs2());
-    hart->set_reg(instr->get_rd(), res);
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), res);
 };
 
 //-------------------------------------------------------------------
 //  SYSTEM CALLS
 
-void fence (Hart *hart, Instruction *instr){};
+void fence (Hart *hart, Instruction *instr){printf("\nSYSTEM CALL\n\n");};
 
-void fencei(Hart *hart, Instruction *instr){};
+void fencei(Hart *hart, Instruction *instr){printf("\nSYSTEM CALL\n\n");};
 
-void ecall (Hart *hart, Instruction *instr){};
+void ecall (Hart *hart, Instruction *instr){printf("\nSYSTEM CALL\n\n");};
 
-void ebreak(Hart *hart, Instruction *instr){};
+void ebreak(Hart *hart, Instruction *instr){printf("\nSYSTEM CALL\n\n");};
 
 //-------------------------------------------------------------------
 //  CONTROL AND STATUS REGISTER COMMANDS
 
-void csrrw (Hart *hart, Instruction *instr){};
+void csrrw (Hart *hart, Instruction *instr){printf("\nSYSTEM CALL\n\n");};
 
-void csrrs (Hart *hart, Instruction *instr){};
+void csrrs (Hart *hart, Instruction *instr){printf("\nSYSTEM CALL\n\n");};
 
-void csrrc (Hart *hart, Instruction *instr){};
+void csrrc (Hart *hart, Instruction *instr){printf("\nSYSTEM CALL\n\n");};
 
-void csrrwi(Hart *hart, Instruction *instr){};
+void csrrwi(Hart *hart, Instruction *instr){printf("\nSYSTEM CALL\n\n");};
 
-void csrrsi(Hart *hart, Instruction *instr){};
+void csrrsi(Hart *hart, Instruction *instr){printf("\nSYSTEM CALL\n\n");};
 
-void csrrci(Hart *hart, Instruction *instr){};
+void csrrci(Hart *hart, Instruction *instr){printf("\nSYSTEM CALL\n\n");};
 

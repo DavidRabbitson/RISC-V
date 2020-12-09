@@ -20,6 +20,8 @@ class Instruction
         RegVal get_rs1(){ return m_rs1; };
         RegVal get_rs2(){ return m_rs2; };
         RegVal get_imm(){ return m_imm; };
+        bool is_branch(){ return (m_executor <= ExecId::BGEU) &&\
+                                 (m_executor >= ExecId::JAL); };
         void set_fields(Instr32raw instr);
         void find_executor();
         ExecId get_exec_id(){ return m_executor; };

@@ -5,6 +5,7 @@
 #include<iostream>
 #include<cstdint>
 #include<fstream>
+#include<cassert>
 
 const int mem_size = 2048;
 

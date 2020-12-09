@@ -271,6 +271,7 @@ void Instruction::find_executor()
             break;
 
         case 0x67:
+            m_imm = m_imm >> 8;
             m_executor = ExecId::JALR;
             break;
 
