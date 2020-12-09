@@ -32,7 +32,7 @@ void lui   (Hart *hart, Instruction *instr);//implemented
 void auipc (Hart *hart, Instruction *instr);//implemented
 
 //BRANCHES
-void jal   (Hart *hart, Instruction *instr);//implemented?
+void jal   (Hart *hart, Instruction *instr);//implemented
 void jalr  (Hart *hart, Instruction *instr);
 void beq   (Hart *hart, Instruction *instr);
 void bne   (Hart *hart, Instruction *instr);

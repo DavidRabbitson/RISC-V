@@ -5,6 +5,7 @@
 #include<iostream>
 #include<cstdint>
 #include<fstream>
+#include<cassert>
 
 typedef uint32_t Word;
 typedef uint16_t HalfWord;

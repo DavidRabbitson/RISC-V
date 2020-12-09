@@ -20,20 +20,20 @@ class Hart
     private:
         RegVal m_pc;
         RegVal m_reg[32];
-        RegVal m_csr;
+        RegVal m_ras[256];
         class Memory *m_memory;
 
         void fetch(Instr32raw *buf, ifstream *program, int pc);
         void decode(class Instruction *instr, Instr32raw raw);
         void execute(class Executor *exec, class Instruction *instr);
-
     public:
         Hart(class Memory *mem);
 
         RegVal get_reg(RegId reg){ return m_reg[reg]; };
         RegVal get_pc(){ return m_pc; };
         void set_reg(RegId reg, RegVal val){ m_reg[reg] = val; };
-        void set_pc_offset(RegVal offset){ m_pc = m_pc + offset; };
+        void set_pc_offset(SignedRegVal offset){ m_pc += offset; };
+        void print_regs();
 
         void run();
 };
