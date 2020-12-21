@@ -27,7 +27,7 @@ ifstream *Memory::get_prog_mem()
 int Memory::dram_read(Word* word, RegVal addr, size_t size)
 {
 	if(size == sizeof(Byte))
-		*word = (Byte) m_dram[addr];	
+		*word = (Byte) m_dram[addr];
 	else if(size == sizeof(HalfWord))
 		*word = (HalfWord) *((HalfWord*) (m_dram + addr * sizeof(Byte)));	
 	else if(size == sizeof(Word))
@@ -39,14 +39,14 @@ int Memory::dram_read(Word* word, RegVal addr, size_t size)
 	return 0;
 };
 
-int Memory::dram_write(Word* word, RegVal addr, size_t size)
+int Memory::dram_write(Word word, RegVal addr, size_t size)
 {
 	if(size == sizeof(Byte))
-		m_dram[addr] = *((Byte*) word);
+		m_dram[addr] = (Byte)(word);
 	else if(size == sizeof(HalfWord))
-		*((HalfWord*) (m_dram + addr * sizeof(Byte))) = *((HalfWord*) word);
+		*((HalfWord*) (m_dram + addr * sizeof(Byte))) = (HalfWord)(word);
 	else if(size == sizeof(Word))
-		*((Word*) (m_dram + addr * sizeof(Byte))) = *((Word*) word);	
+		*((Word*) (m_dram + addr * sizeof(Byte))) = word;	
 	else
 		return -1;
 

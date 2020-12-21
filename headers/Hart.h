@@ -29,10 +29,11 @@ class Hart
     public:
         Hart(class Memory *mem);
 
+        class Memory *get_mem() { return m_memory; };
         RegVal get_reg(RegId reg){ return m_reg[reg]; };
         RegVal get_pc(){ return m_pc; };
         void set_reg(RegId reg, RegVal val){ m_reg[reg] = val; };
-        void set_pc_offset(SignedRegVal offset){ m_pc += offset; };
+        void set_pc(SignedRegVal pc){ m_pc = pc; };
         void print_regs();
 
         void run();

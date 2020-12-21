@@ -17,7 +17,7 @@ class Memory
         RegVal *get_frame_pointer();
         
         int dram_read(Word* word, RegVal addr, size_t size);
-        int dram_write(Word* word, RegVal addr, size_t size);
+        int dram_write(Word word, RegVal addr, size_t size);
         
 
         ~Memory();

@@ -1,5 +1,6 @@
 #include"../includes.h"
 #include"../headers/Hart.h"
+#include"../headers/Memory.h"
 #include"../headers/Instruction.h"
 #include"../headers/Executor.h"
 
@@ -21,14 +22,14 @@ Executor::Executor(Hart *hart)
     m_executors[ExecId::BGE]    = &bge;
     m_executors[ExecId::BLTU]   = &bltu;
     m_executors[ExecId::BGEU]   = &bgeu;
-    m_executors[ExecId::LB]     = &lb;
-    m_executors[ExecId::LH]     = &lh;
-    m_executors[ExecId::LW]     = &lw;
-    m_executors[ExecId::LBU]    = &lbu;
-    m_executors[ExecId::LHU]    = &lhu;
-    m_executors[ExecId::SB]     = &sb;
-    m_executors[ExecId::SH]     = &sh;
-    m_executors[ExecId::SW]     = &sw;
+    m_executors[ExecId::LB]     = &dummy;
+    m_executors[ExecId::LH]     = &dummy;
+    m_executors[ExecId::LW]     = &dummy;
+    m_executors[ExecId::LBU]    = &dummy;
+    m_executors[ExecId::LHU]    = &dummy;
+    m_executors[ExecId::SB]     = &dummy;
+    m_executors[ExecId::SH]     = &dummy;
+    m_executors[ExecId::SW]     = &dummy;
     m_executors[ExecId::ADDI]   = &addi;
     m_executors[ExecId::SLTI]   = &slti;
     m_executors[ExecId::SLTIU]  = &sltiu;
@@ -80,6 +81,7 @@ void auipc (Hart *hart, Instruction *instr)
 void jal(Hart *hart, Instruction *instr)
 {
     hart->set_reg(instr->get_rd(), hart->get_pc() + 4);
+    hart->print_regs();
 
     RegVal offset = instr->get_imm();
     if(instr->get_rd() != 0)
@@ -92,185 +94,216 @@ void jal(Hart *hart, Instruction *instr)
         offset += 0xffe00000;
 
     printf("\nNEXT PC = %x\n\n", offset + hart->get_pc());
-    hart->set_pc_offset(offset);
+    hart->set_pc(hart->get_pc() + offset);
 };
 
 void jalr(Hart *hart, Instruction *instr)
 {
     RegVal offset = instr->get_imm();
-    if(instr->get_rd() != 0)
-        hart->set_reg(instr->get_rd(), hart->get_pc() + 4);
 
     if(offset & 0x800)
         offset += 0xfffff000;
     offset &= 0xfffffffe;
 
-    printf("\nNEXT PC = %x\n\n", offset + hart->get_pc());
-    //hart->print_regs();
+    offset = (hart->get_reg(instr->get_rs1()) + offset) & 0xfffffffe;
 
-    if(offset == 0)
-        offset = 4;
+    printf("\nNEXT PC = %x\n\n", offset);
+    if(instr->get_rd() != 0)
+        hart->set_reg(instr->get_rd(), hart->get_pc() + 4);
 
-    hart->set_pc_offset(offset);
+    hart->set_pc(offset);
 };
 
 void beq(Hart *hart, Instruction *instr)
 {
-    RegVal offset = (instr->get_imm() << 5) + instr->get_rd();
-
-    offset = ((offset & 0x800) + ((offset & 0x7fe) >> 1) + \
-             ((offset & 0x001) << 10)) << 1;
-
-    if(offset & 0x1000)
-        offset += 0xffffe000;
-
     if(hart->get_reg(instr->get_rs1()) == hart->get_reg(instr->get_rs2()))
     {
+        RegVal offset = (instr->get_imm() << 5) + instr->get_rd();
+
+        offset = ((offset & 0x800) + ((offset & 0x7fe) >> 1) + \
+                 ((offset & 0x001) << 10)) << 1;
+
+        if(offset & 0x1000)
+            offset += 0xffffe000;
+
         printf("\nNEXT PC = %x\n\n", offset + hart->get_pc());
-        hart->set_pc_offset(offset);
+        hart->set_pc(hart->get_pc() + offset);
     }
     else
-        hart->set_pc_offset(4);
+        hart->set_pc(hart->get_pc() + 4);
 };
 
 void bne(Hart *hart, Instruction *instr)
-{
-    RegVal offset = (instr->get_imm() << 5) + instr->get_rd();
-
-    offset = ((offset & 0x800) + ((offset & 0x7fe) >> 1) + \
-             ((offset & 0x001) << 10)) << 1;
-
-    if(offset & 0x1000)
-        offset += 0xffffe000;
-    
+{    
     if(hart->get_reg(instr->get_rs1()) != hart->get_reg(instr->get_rs2()))
     {
+        RegVal offset = (instr->get_imm() << 5) + instr->get_rd();
+
+        offset = ((offset & 0x800) + ((offset & 0x7fe) >> 1) + \
+                 ((offset & 0x001) << 10)) << 1;
+
+        if(offset & 0x1000)
+            offset += 0xffffe000;
+
         printf("\nNEXT PC = %x\n\n", offset + hart->get_pc());
-        hart->set_pc_offset(offset);
+        hart->set_pc(hart->get_pc() + offset);
     }
     else
-        hart->set_pc_offset(4);
+        hart->set_pc(hart->get_pc() + 4);
 };
 
 void blt(Hart *hart, Instruction *instr)
 {
-    RegVal offset = (instr->get_imm() << 5) + instr->get_rd();
-
-    offset = ((offset & 0x800) + ((offset & 0x7fe) >> 1) + \
-             ((offset & 0x001) << 10)) << 1;
-
-    if(offset & 0x1000)
-        offset += 0xffffe000;
-
     if((SignedRegVal)hart->get_reg(instr->get_rs1()) < \
        (SignedRegVal)hart->get_reg(instr->get_rs2()))
     {
+        RegVal offset = (instr->get_imm() << 5) + instr->get_rd();
+
+        offset = ((offset & 0x800) + ((offset & 0x7fe) >> 1) + \
+                 ((offset & 0x001) << 10)) << 1;
+
+        if(offset & 0x1000)
+            offset += 0xffffe000;
+
         printf("\nNEXT PC = %x\n\n", offset + hart->get_pc());
-        hart->set_pc_offset(offset);
+        hart->set_pc(hart->get_pc() + offset);
     }
     else
-        hart->set_pc_offset(4);
+        hart->set_pc(hart->get_pc() + 4);
 };
 
 void bge(Hart *hart, Instruction *instr)
 {
-    RegVal offset = (instr->get_imm() << 5) + instr->get_rd();
-
-    offset = ((offset & 0x800) + ((offset & 0x7fe) >> 1) + \
-             ((offset & 0x001) << 10)) << 1;
-
-    if(offset & 0x1000)
-        offset += 0xffffe000;
-
     if((SignedRegVal)hart->get_reg(instr->get_rs1()) >= \
        (SignedRegVal)hart->get_reg(instr->get_rs2()))
     {
+        RegVal offset = (instr->get_imm() << 5) + instr->get_rd();
+
+        offset = ((offset & 0x800) + ((offset & 0x7fe) >> 1) + \
+                 ((offset & 0x001) << 10)) << 1;
+
+        if(offset & 0x1000)
+            offset += 0xffffe000;
+
         printf("\nNEXT PC = %x\n\n", offset + hart->get_pc());
-        hart->set_pc_offset(offset);
+        hart->set_pc(hart->get_pc() + offset);
     }
     else
-        hart->set_pc_offset(4);
+        hart->set_pc(hart->get_pc() + 4);
 };
 
 void bltu(Hart *hart, Instruction *instr)
 {
-    RegVal offset = (instr->get_imm() << 5) + instr->get_rd();
-
-    offset = ((offset & 0x800) + ((offset & 0x7fe) >> 1) + \
-             ((offset & 0x001) << 10)) << 1;
-
-    if(offset & 0x1000)
-        offset += 0xffffe000;
-
     if(hart->get_reg(instr->get_rs1()) < hart->get_reg(instr->get_rs2()))
     {
+        RegVal offset = (instr->get_imm() << 5) + instr->get_rd();
+
+        offset = ((offset & 0x800) + ((offset & 0x7fe) >> 1) + \
+                 ((offset & 0x001) << 10)) << 1;
+
+        if(offset & 0x1000)
+            offset += 0xffffe000;
+
         printf("\nNEXT PC = %x\n\n", offset + hart->get_pc());
-        hart->set_pc_offset(offset);
+        hart->set_pc(hart->get_pc() + offset);
     }
     else
-        hart->set_pc_offset(4);
+        hart->set_pc(hart->get_pc() + 4);
 };
 
 void bgeu(Hart *hart, Instruction *instr)
 {
-    RegVal offset = (instr->get_imm() << 5) + instr->get_rd();
-
-    offset = ((offset & 0x800) + ((offset & 0x7fe) >> 1) + \
-             ((offset & 0x001) << 10)) << 1;
-
-    if(offset & 0x1000)
-        offset += 0xffffe000;
-
     if(hart->get_reg(instr->get_rs1()) >= hart->get_reg(instr->get_rs2()))
     {
+        RegVal offset = (instr->get_imm() << 5) + instr->get_rd();
+
+        offset = ((offset & 0x800) + ((offset & 0x7fe) >> 1) + \
+                 ((offset & 0x001) << 10)) << 1;
+
+        if(offset & 0x1000)
+            offset += 0xffffe000;
+
         printf("\nNEXT PC = %x\n\n", offset + hart->get_pc());
-        hart->set_pc_offset(offset);
+        hart->set_pc(hart->get_pc() + offset);
     }
     else
-        hart->set_pc_offset(4);
+        hart->set_pc(hart->get_pc() + 4);
 };
 
 //-------------------------------------------------------------------
 //  LOADS AND STORES
 
-void lb    (Hart *hart, Instruction *instr)
+void lb(Hart *hart, Instruction *instr)
 {
-	hart->dram_read(instr.m_rs1, instr->m_rd, sizeof(Byte));
+    Word word = 0;
+    RegVal offset = instr->get_imm();
+
+    if(offset & 0x800)
+        offset += 0xfffff000;
+
+    offset = hart->get_reg(instr->get_rs1()) + (SignedRegVal)(offset);
+
+	//(hart->get_mem())->dram_read(&word, , sizeof(Byte));
+
+    if(word & 0x80)
+        word += 0xffffff;
+
+    hart->set_reg(instr->get_rs1(), word);
 };
 
-void lh    (Hart *hart, Instruction *instr)
+void lh(Hart *hart, Instruction *instr)
 {
-	hart->dram_read(instr.m_rs1, instr->m_rd, sizeof(HalfWord));
+    Word word = 0;
+
+	(hart->get_mem())->dram_read(&word, hart->get_reg(instr->get_rd()), sizeof(HalfWord));
+
+    if(word & 0x8000)
+        word += 0xffff;
+
+    hart->set_reg(instr->get_rs1(), word);
 };
 
-void lw    (Hart *hart, Instruction *instr)
+void lw(Hart *hart, Instruction *instr)
 {
-	hart->dram_read(instr.m_rs1, instr->m_rd, sizeof(Word));
+    Word word = 0;
+
+	(hart->get_mem())->dram_read(&word, hart->get_reg(instr->get_rd()), sizeof(Word));
+
+    hart->set_reg(instr->get_rs1(), (word));
 };
 
-void lbu   (Hart *hart, Instruction *instr)
+void lbu(Hart *hart, Instruction *instr)
 {
-	hart->dram_read(instr.m_rs1, instr->m_rd, sizeof(Byte));		// ???
+    Word word = 0;
+
+	(hart->get_mem())->dram_read(&word, hart->get_reg(instr->get_rd()), sizeof(Byte));
+
+    hart->set_reg(instr->get_rs1(), word);
 };
 
-void lhu   (Hart *hart, Instruction *instr)
+void lhu(Hart *hart, Instruction *instr)
 {
-	hart->dram_read(instr.m_rs1, instr->m_rd, sizeof(HalfWord));	// ???
+    Word word = 0;
+
+	(hart->get_mem())->dram_read(&word, hart->get_reg(instr->get_rd()), sizeof(HalfWord));
+
+    hart->set_reg(instr->get_rs1(), word);
 };
 
-void sb    (Hart *hart, Instruction *instr)
+void sb(Hart *hart, Instruction *instr)
 {
-	hart->dram_write(instr.m_rs2, instr->m_rs1, sizeof(Byte));
+    //(hart->get_mem())->dram_write(hart->get_reg(instr->get_rs2()), );
+	//hart->dram_write(instr->get_rs2(), instr->get_rs1(), sizeof(Byte));
 };
 
-void sh    (Hart *hart, Instruction *instr)
+void sh(Hart *hart, Instruction *instr)
 {
-	hart->dram_write(instr.m_rs2, instr->m_rs1, sizeof(HalfWord));
+	//hart->dram_write(instr->get_rs2(), instr->get_rs1(), sizeof(HalfWord));
 };
 
-void sw    (Hart *hart, Instruction *instr)
+void sw(Hart *hart, Instruction *instr)
 {
-	hart->dram_write(instr.m_rs2, instr->m_rs1, sizeof(Word));
+	//hart->dram_write(instr->get_rs2(), instr->get_rs1(), sizeof(Word));
 };
 
 //-------------------------------------------------------------------
